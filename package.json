@@ -1,0 +1,15 @@
+{
+  "name": "yul",
+  "packageManager": "yarn@3.3.1",
+  "scripts": {
+    "clean": "rm -rf cache out broadcast",
+    "lint": "npm run lint:sol",
+    "lint:sol": "forge fmt --check && solhint -w 0 '**/*.sol'",
+    "fmt": "npm run fmt:sol",
+    "fmt:sol": "forge fmt",
+    "deploy:local": "forge script script/Deploy.s.sol:DeployScript --rpc-url localhost --broadcast"
+  },
+  "devDependencies": {
+    "solhint": "^3.4.1"
+  }
+}
