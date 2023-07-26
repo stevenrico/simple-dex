@@ -9,10 +9,10 @@ contract Constructor is BaseTest {
     }
 
     function testName() external {
-        assertEq(PoolToken.name(), "Pool Token");
+        assertEq(LiquidToken.name(), "Liquidity Token");
     }
 
     function testSymbol() external {
-        assertEq(PoolToken.symbol(), "POOL");
+        assertEq(LiquidToken.symbol(), "LIQUID");
     }
 }

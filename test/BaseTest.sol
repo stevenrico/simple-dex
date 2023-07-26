@@ -5,14 +5,14 @@ import { Test } from "@forge-std/Test.sol";
 import { Users } from "./utils/Users.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 
-import { PoolTokenERC20 } from "contracts/core/PoolTokenERC20.sol";
+import { LiquidityTokenERC20 } from "contracts/core/LiquidityTokenERC20.sol";
 import { Pair } from "contracts/core/Pair.sol";
 
 import { Router } from "contracts/periphery/Router.sol";
 
 contract BaseTest is Test, Users {
     /* solhint-disable */
-    PoolTokenERC20 internal PoolToken;
+    LiquidityTokenERC20 internal LiquidToken;
 
     MockERC20 internal TokenOne;
     MockERC20 internal TokenTwo;
@@ -34,7 +34,7 @@ contract BaseTest is Test, Users {
 
         vm.startPrank(_owner);
 
-        PoolToken = new PoolTokenERC20();
+        LiquidToken = new LiquidityTokenERC20();
 
         TokenOne = new MockERC20("Token One", "TKN1");
         TokenTwo = new MockERC20("Token Two", "TKN2");

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import { PoolTokenERC20 } from "contracts/core/PoolTokenERC20.sol";
+import { LiquidityTokenERC20 } from "contracts/core/LiquidityTokenERC20.sol";
 
 /**
  * @notice Pair contract is used to manage trading pairs
  */
 
-contract Pair is PoolTokenERC20 {
+contract Pair is LiquidityTokenERC20 {
     address private _tokenA;
     address private _tokenB;
 
