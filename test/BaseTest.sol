@@ -6,6 +6,7 @@ import { Users } from "./utils/Users.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
 
 import { PoolTokenERC20 } from "contracts/core/PoolTokenERC20.sol";
+import { Pair } from "contracts/core/Pair.sol";
 
 contract BaseTest is Test, Users {
     /* solhint-disable */
@@ -13,6 +14,8 @@ contract BaseTest is Test, Users {
 
     MockERC20 internal TokenOne;
     MockERC20 internal TokenTwo;
+
+    Pair internal PairX;
     /* solhint-enable */
 
     mapping(address => uint256) internal _tokenDistributions;
@@ -31,6 +34,8 @@ contract BaseTest is Test, Users {
 
         TokenOne = new MockERC20("Token One", "TKN1");
         TokenTwo = new MockERC20("Token Two", "TKN2");
+
+        PairX = new Pair(address(TokenOne), address(TokenTwo));
 
         vm.stopPrank();
 
@@ -79,10 +84,14 @@ contract BaseTest is Test, Users {
             address liquidityProvider = _liquidityProviders[i];
 
             _itMintsTokens(
-                TokenOne, liquidityProvider, _tokenDistributions[address(TokenOne)]
+                TokenOne,
+                liquidityProvider,
+                _tokenDistributions[address(TokenOne)]
             );
             _itMintsTokens(
-                TokenTwo, liquidityProvider, _tokenDistributions[address(TokenTwo)]
+                TokenTwo,
+                liquidityProvider,
+                _tokenDistributions[address(TokenTwo)]
             );
         }
     }
