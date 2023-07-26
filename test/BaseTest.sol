@@ -8,6 +8,8 @@ import { MockERC20 } from "./mocks/MockERC20.sol";
 import { PoolTokenERC20 } from "contracts/core/PoolTokenERC20.sol";
 import { Pair } from "contracts/core/Pair.sol";
 
+import { Router } from "contracts/periphery/Router.sol";
+
 contract BaseTest is Test, Users {
     /* solhint-disable */
     PoolTokenERC20 internal PoolToken;
@@ -16,6 +18,8 @@ contract BaseTest is Test, Users {
     MockERC20 internal TokenTwo;
 
     Pair internal PairX;
+
+    Router internal RouterX;
     /* solhint-enable */
 
     mapping(address => uint256) internal _tokenDistributions;
@@ -36,6 +40,8 @@ contract BaseTest is Test, Users {
         TokenTwo = new MockERC20("Token Two", "TKN2");
 
         PairX = new Pair(address(TokenOne), address(TokenTwo));
+
+        RouterX = new Router(address(PairX));
 
         vm.stopPrank();
 
