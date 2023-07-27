@@ -22,5 +22,5 @@ line_length = 80
 wrap_comments = false
 tab_width = 4
 number_underscore = "thousands"
-
+ignore = ["**/interfaces/*.sol"]
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
