@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import { BaseTest } from "../../BaseTest.sol";
 
-import { MockERC20 } from "tests/mocks/MockERC20.sol";
+import { IERC20 } from "@openzeppelin/token/ERC20/IERC20.sol";
 import { Pair } from "contracts/core/Pair.sol";
 
 contract PairBase is BaseTest {
@@ -24,15 +24,15 @@ contract PairBase is BaseTest {
 
     function _addLiquidity(
         address liquidityProvider,
-        MockERC20 token,
+        address token,
         address pair,
         uint256 ratio
     ) internal returns (uint256 amount) {
         uint256 totalDistribution =
-            _tokenDistributions[address(token)][liquidityProvider];
+            _tokenDistributions[token][liquidityProvider];
         amount = totalDistribution * ratio / 100;
 
         vm.prank(liquidityProvider);
-        token.transfer(pair, amount);
+        IERC20(token).transfer(pair, amount);
     }
 }

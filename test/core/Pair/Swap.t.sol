@@ -5,7 +5,7 @@ import { PairBase } from "./Base.t.sol";
 
 import { Math } from "@openzeppelin/utils/math/Math.sol";
 
-import { MockERC20 } from "tests/mocks/MockERC20.sol";
+import { IERC20 } from "@openzeppelin/token/ERC20/IERC20.sol";
 import { Pair } from "contracts/core/Pair.sol";
 
 contract SwapTest is PairBase {
@@ -23,20 +23,22 @@ contract SwapTest is PairBase {
     }
 
     function testSwapOfTokenAForTokenB() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address liquidityProvider = _liquidityProviders[0];
 
         uint256 reserveA =
-            _addLiquidity(liquidityProvider, TokenOne, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
         uint256 reserveB =
-            _addLiquidity(liquidityProvider, TokenTwo, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
 
         address trader = _traders[0];
 
-        uint256 traderBalanceA = _tokenDistributions[address(TokenOne)][trader];
-        uint256 traderBalanceB = _tokenDistributions[address(TokenTwo)][trader];
+        uint256 traderBalanceA = _tokenDistributions[tokenA][trader];
+        uint256 traderBalanceB = _tokenDistributions[tokenB][trader];
 
         uint256 amountAIn = traderBalanceA;
         uint256 amountBOut = amountAIn * reserveB / (amountAIn + reserveA);
@@ -44,7 +46,7 @@ contract SwapTest is PairBase {
         vm.startPrank(trader);
 
         // [Q] Should I test for `event Transfer(...)`?
-        TokenOne.transfer(address(PairX), amountAIn);
+        IERC20(tokenA).transfer(address(PairX), amountAIn);
 
         vm.expectEmit(true, true, false, true, address(PairX));
         emit Swap(trader, trader, amountAIn, 0, 0, amountBOut);
@@ -56,30 +58,32 @@ contract SwapTest is PairBase {
         uint256 expectedAmountA = reserveA + amountAIn;
         uint256 expectedAmountB = reserveB - amountBOut;
 
-        assertEq(TokenOne.balanceOf(address(PairX)), expectedAmountA);
-        assertEq(TokenTwo.balanceOf(address(PairX)), expectedAmountB);
+        assertEq(IERC20(tokenA).balanceOf(address(PairX)), expectedAmountA);
+        assertEq(IERC20(tokenB).balanceOf(address(PairX)), expectedAmountB);
 
         _itUpdatesReserves(PairX, expectedAmountA, expectedAmountB);
 
-        assertEq(TokenOne.balanceOf(trader), 0);
-        assertEq(TokenTwo.balanceOf(trader), traderBalanceB + amountBOut);
+        assertEq(IERC20(tokenA).balanceOf(trader), 0);
+        assertEq(IERC20(tokenB).balanceOf(trader), traderBalanceB + amountBOut);
     }
 
     function testSwapOfTokenBForTokenA() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address liquidityProvider = _liquidityProviders[0];
 
         uint256 reserveA =
-            _addLiquidity(liquidityProvider, TokenOne, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
         uint256 reserveB =
-            _addLiquidity(liquidityProvider, TokenTwo, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
 
         address trader = _traders[0];
 
-        uint256 traderBalanceA = _tokenDistributions[address(TokenOne)][trader];
-        uint256 traderBalanceB = _tokenDistributions[address(TokenTwo)][trader];
+        uint256 traderBalanceA = _tokenDistributions[address(tokenA)][trader];
+        uint256 traderBalanceB = _tokenDistributions[address(tokenB)][trader];
 
         uint256 amountBIn = traderBalanceB;
         uint256 amountAOut = amountBIn * reserveA / (amountBIn + reserveB);
@@ -87,7 +91,7 @@ contract SwapTest is PairBase {
         vm.startPrank(trader);
 
         // [Q] Should I test for `event Transfer(...)`?
-        TokenTwo.transfer(address(PairX), amountBIn);
+        IERC20(tokenB).transfer(address(PairX), amountBIn);
 
         vm.expectEmit(true, true, false, true, address(PairX));
         emit Swap(trader, trader, 0, amountAOut, amountBIn, 0);
@@ -99,13 +103,13 @@ contract SwapTest is PairBase {
         uint256 expectedAmountA = reserveA - amountAOut;
         uint256 expectedAmountB = reserveB + amountBIn;
 
-        assertEq(TokenOne.balanceOf(address(PairX)), expectedAmountA);
-        assertEq(TokenTwo.balanceOf(address(PairX)), expectedAmountB);
+        assertEq(IERC20(tokenA).balanceOf(address(PairX)), expectedAmountA);
+        assertEq(IERC20(tokenB).balanceOf(address(PairX)), expectedAmountB);
 
         _itUpdatesReserves(PairX, expectedAmountA, expectedAmountB);
 
-        assertEq(TokenOne.balanceOf(trader), traderBalanceA + amountAOut);
-        assertEq(TokenTwo.balanceOf(trader), 0);
+        assertEq(IERC20(tokenA).balanceOf(trader), traderBalanceA + amountAOut);
+        assertEq(IERC20(tokenB).balanceOf(trader), 0);
     }
 
     function testRevertWhenBothAmountOutAreZero() external {
@@ -133,10 +137,12 @@ contract SwapTest is PairBase {
     }
 
     function testRevertWhenPairHasLowLiquidity() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address liquidityProvider = _liquidityProviders[0];
 
-        _addLiquidity(liquidityProvider, TokenOne, address(PairX), 5);
-        _addLiquidity(liquidityProvider, TokenTwo, address(PairX), 5);
+        _addLiquidity(liquidityProvider, tokenA, address(PairX), 5);
+        _addLiquidity(liquidityProvider, tokenB, address(PairX), 5);
 
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
@@ -157,10 +163,12 @@ contract SwapTest is PairBase {
     }
 
     function testRevertWhenRecipientIsInvalid() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address liquidityProvider = _liquidityProviders[0];
 
-        _addLiquidity(liquidityProvider, TokenOne, address(PairX), 100);
-        _addLiquidity(liquidityProvider, TokenTwo, address(PairX), 100);
+        _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
+        _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
@@ -172,25 +180,27 @@ contract SwapTest is PairBase {
         vm.startPrank(trader);
 
         vm.expectRevert("Pair: Invalid recipient");
-        PairX.swap(amountOut, 0, address(TokenOne));
+        PairX.swap(amountOut, 0, address(tokenA));
 
         vm.expectRevert("Pair: Invalid recipient");
-        PairX.swap(0, amountOut, address(TokenOne));
+        PairX.swap(0, amountOut, address(tokenA));
 
         vm.expectRevert("Pair: Invalid recipient");
-        PairX.swap(amountOut, 0, address(TokenTwo));
+        PairX.swap(amountOut, 0, address(tokenB));
 
         vm.expectRevert("Pair: Invalid recipient");
-        PairX.swap(0, amountOut, address(TokenTwo));
+        PairX.swap(0, amountOut, address(tokenB));
 
         vm.stopPrank();
     }
 
     function testRevertWhenAmountInIsZero() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address liquidityProvider = _liquidityProviders[0];
 
-        _addLiquidity(liquidityProvider, TokenOne, address(PairX), 100);
-        _addLiquidity(liquidityProvider, TokenTwo, address(PairX), 100);
+        _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
+        _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
@@ -213,26 +223,28 @@ contract SwapTest is PairBase {
     function testRevertWhenAmountInIsNotEnoughForSwapOfTokenAForTokenB()
         external
     {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address liquidityProvider = _liquidityProviders[0];
 
         uint256 reserveA =
-            _addLiquidity(liquidityProvider, TokenOne, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
         uint256 reserveB =
-            _addLiquidity(liquidityProvider, TokenTwo, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
 
         address trader = _traders[0];
 
-        uint256 traderBalanceA = _tokenDistributions[address(TokenOne)][trader];
+        uint256 traderBalanceA = _tokenDistributions[address(tokenA)][trader];
 
         uint256 amountAIn = traderBalanceA;
         uint256 amountBOut = amountAIn * reserveB / (amountAIn + reserveA);
 
         vm.startPrank(trader);
 
-        TokenOne.transfer(address(PairX), amountAIn / 2);
+        IERC20(tokenA).transfer(address(PairX), amountAIn / 2);
 
         vm.expectRevert("Pair: K");
         PairX.swap(0, amountBOut, trader);
@@ -243,26 +255,28 @@ contract SwapTest is PairBase {
     function testRevertWhenAmountInIsNotEnoughForSwapOfTokenBForTokenA()
         external
     {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address liquidityProvider = _liquidityProviders[0];
 
         uint256 reserveA =
-            _addLiquidity(liquidityProvider, TokenOne, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
         uint256 reserveB =
-            _addLiquidity(liquidityProvider, TokenTwo, address(PairX), 100);
+            _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
 
         address trader = _traders[0];
 
-        uint256 traderBalanceB = _tokenDistributions[address(TokenTwo)][trader];
+        uint256 traderBalanceB = _tokenDistributions[address(tokenB)][trader];
 
         uint256 amountBIn = traderBalanceB;
         uint256 amountAOut = amountBIn * reserveA / (amountBIn + reserveB);
 
         vm.startPrank(trader);
 
-        TokenTwo.transfer(address(PairX), amountBIn / 2);
+        IERC20(tokenB).transfer(address(PairX), amountBIn / 2);
 
         vm.expectRevert("Pair: K");
         PairX.swap(amountAOut, 0, trader);

@@ -10,6 +10,8 @@ import { Pair } from "contracts/core/Pair.sol";
 
 import { Router } from "contracts/periphery/Router.sol";
 
+import { Utils } from "contracts/libraries/Utils.sol";
+
 contract BaseTest is Test, Users {
     /* solhint-disable */
     LiquidityTokenERC20 internal LiquidToken;
@@ -41,7 +43,10 @@ contract BaseTest is Test, Users {
         TokenOne = new MockERC20("Token One", "TKN1");
         TokenTwo = new MockERC20("Token Two", "TKN2");
 
-        PairX = new Pair(address(TokenOne), address(TokenTwo));
+        (address tokenA, address tokenB) =
+            Utils.sortTokens(address(TokenOne), address(TokenTwo));
+
+        PairX = new Pair(tokenA, tokenB);
 
         RouterX = new Router(address(PairX));
 

@@ -13,12 +13,12 @@ contract MintTest is PairBase {
     }
 
     function testMintWhenTotalSupplyIsZero() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address recipient = _liquidityProviders[0];
 
-        uint256 amountA =
-            _addLiquidity(recipient, TokenOne, address(PairX), 100);
-        uint256 amountB =
-            _addLiquidity(recipient, TokenTwo, address(PairX), 100);
+        uint256 amountA = _addLiquidity(recipient, tokenA, address(PairX), 100);
+        uint256 amountB = _addLiquidity(recipient, tokenB, address(PairX), 100);
 
         vm.expectEmit(true, false, false, true, address(PairX));
         emit Mint(recipient, amountA, amountB);
@@ -35,6 +35,8 @@ contract MintTest is PairBase {
     }
 
     function testMintWhenTotalSupplyIsGreaterThanZero() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
         address recipient = _liquidityProviders[0];
 
         uint256 reserveA;
@@ -44,9 +46,9 @@ contract MintTest is PairBase {
 
         {
             uint256 amountA =
-                _addLiquidity(recipient, TokenOne, address(PairX), 50);
+                _addLiquidity(recipient, tokenA, address(PairX), 50);
             uint256 amountB =
-                _addLiquidity(recipient, TokenTwo, address(PairX), 50);
+                _addLiquidity(recipient, tokenB, address(PairX), 50);
 
             vm.prank(recipient);
             uint256 liquidityTokens = PairX.mint(recipient);
@@ -61,9 +63,9 @@ contract MintTest is PairBase {
             uint256 totalSupply = PairX.totalSupply();
 
             uint256 amountA =
-                _addLiquidity(recipient, TokenOne, address(PairX), 50);
+                _addLiquidity(recipient, tokenA, address(PairX), 50);
             uint256 amountB =
-                _addLiquidity(recipient, TokenTwo, address(PairX), 50);
+                _addLiquidity(recipient, tokenB, address(PairX), 50);
 
             vm.prank(recipient);
             uint256 liquidityTokens = PairX.mint(recipient);
