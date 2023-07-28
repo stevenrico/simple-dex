@@ -109,14 +109,10 @@ contract BaseTest is Test, Users {
             address trader = _traders[i];
 
             _itMintsTokens(
-                TokenOne,
-                trader,
-                _tokenDistributions[address(TokenOne)][trader]
+                TokenOne, trader, _tokenDistributions[address(TokenOne)][trader]
             );
             _itMintsTokens(
-                TokenTwo,
-                trader,
-                _tokenDistributions[address(TokenTwo)][trader]
+                TokenTwo, trader, _tokenDistributions[address(TokenTwo)][trader]
             );
         }
     }
