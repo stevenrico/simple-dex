@@ -22,11 +22,13 @@ contract BaseTest is Test, Users {
     Router internal RouterX;
     /* solhint-enable */
 
-    mapping(address => uint256) internal _tokenDistributions;
+    mapping(address token => mapping(address user => uint256 amount)) internal
+        _tokenDistributions;
 
     address private _owner;
 
     address[] internal _liquidityProviders;
+    address[] internal _traders;
 
     function setUp() public virtual {
         uint256 ownersId = _createUserGroup("OWNER");
@@ -49,31 +51,31 @@ contract BaseTest is Test, Users {
             _createUserGroup("LIQUIDITY PROVIDER", 2, 100 ether);
         _liquidityProviders = liquidityProviders;
 
-        {
-            uint256 amount = 500 * 10 ** TokenOne.decimals();
-            _tokenDistributions[address(TokenOne)] = amount;
-        }
+        _mintMockTokensForUsers(liquidityProviders, TokenOne, 5000);
+        _mintMockTokensForUsers(liquidityProviders, TokenTwo, 1000);
 
-        {
-            uint256 amount = 100 * 10 ** TokenTwo.decimals();
-            _tokenDistributions[address(TokenTwo)] = amount;
-        }
+        (, address[] memory traders) = _createUserGroup("TRADER", 2, 100 ether);
+        _traders = traders;
 
-        _mintMockTokens(liquidityProviders, TokenOne, TokenTwo);
+        _mintMockTokensForUsers(traders, TokenOne, 50);
+        _mintMockTokensForUsers(traders, TokenTwo, 10);
     }
 
-    function _mintMockTokens(
+    function _mintMockTokensForUsers(
         address[] memory accounts,
-        MockERC20 tokenA,
-        MockERC20 tokenB
+        MockERC20 token,
+        uint256 amount
     ) private {
+        amount = amount * 10 ** token.decimals();
+
         for (uint256 i = 0; i < accounts.length; i++) {
             address account = accounts[i];
 
             vm.startPrank(account);
 
-            tokenA.mint(_tokenDistributions[address(tokenA)]);
-            tokenB.mint(_tokenDistributions[address(tokenB)]);
+            token.mint(amount);
+
+            _tokenDistributions[address(token)][account] = amount;
 
             vm.stopPrank();
         }
@@ -92,12 +94,29 @@ contract BaseTest is Test, Users {
             _itMintsTokens(
                 TokenOne,
                 liquidityProvider,
-                _tokenDistributions[address(TokenOne)]
+                _tokenDistributions[address(TokenOne)][liquidityProvider]
             );
             _itMintsTokens(
                 TokenTwo,
                 liquidityProvider,
-                _tokenDistributions[address(TokenTwo)]
+                _tokenDistributions[address(TokenTwo)][liquidityProvider]
+            );
+        }
+    }
+
+    function testTraders() external {
+        for (uint256 i = 0; i < _liquidityProviders.length; i++) {
+            address trader = _traders[i];
+
+            _itMintsTokens(
+                TokenOne,
+                trader,
+                _tokenDistributions[address(TokenOne)][trader]
+            );
+            _itMintsTokens(
+                TokenTwo,
+                trader,
+                _tokenDistributions[address(TokenTwo)][trader]
             );
         }
     }

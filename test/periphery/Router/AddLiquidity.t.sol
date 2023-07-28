@@ -9,49 +9,53 @@ contract AddLiquidityTest is BaseTest {
     }
 
     function testTransferToPair() external {
+        address liquidityProvider = _liquidityProviders[0];
+
         address tokenA = address(TokenOne);
-        uint256 amountA = _tokenDistributions[tokenA];
+        uint256 amountA = _tokenDistributions[tokenA][liquidityProvider];
 
         address tokenB = address(TokenTwo);
-        uint256 amountB = _tokenDistributions[tokenB];
+        uint256 amountB = _tokenDistributions[tokenB][liquidityProvider];
 
-        vm.startPrank(_liquidityProviders[0]);
+        vm.startPrank(liquidityProvider);
 
         TokenOne.approve(address(RouterX), amountA);
         TokenTwo.approve(address(RouterX), amountB);
 
         (,, uint256 liquidityTokens) = RouterX.addLiquidity(
-            tokenA, tokenB, amountA, amountB, _liquidityProviders[0]
+            tokenA, tokenB, amountA, amountB, liquidityProvider
         );
 
         vm.stopPrank();
 
         assertEq(TokenOne.balanceOf(address(PairX)), amountA);
-        assertEq(TokenOne.balanceOf(_liquidityProviders[0]), 0);
+        assertEq(TokenOne.balanceOf(liquidityProvider), 0);
         assertEq(TokenTwo.balanceOf(address(PairX)), amountB);
-        assertEq(TokenTwo.balanceOf(_liquidityProviders[0]), 0);
+        assertEq(TokenTwo.balanceOf(liquidityProvider), 0);
 
-        assertEq(PairX.balanceOf(_liquidityProviders[0]), liquidityTokens);
+        assertEq(PairX.balanceOf(liquidityProvider), liquidityTokens);
     }
 
     function testRevertIfTransferWithoutApproval() external {
+        address liquidityProvider = _liquidityProviders[0];
+
         address tokenA = address(TokenOne);
-        uint256 amountA = _tokenDistributions[tokenA];
+        uint256 amountA = _tokenDistributions[tokenA][liquidityProvider];
 
         address tokenB = address(TokenTwo);
-        uint256 amountB = _tokenDistributions[tokenB];
+        uint256 amountB = _tokenDistributions[tokenB][liquidityProvider];
 
         vm.expectRevert("ERC20: insufficient allowance");
-        vm.prank(_liquidityProviders[0]);
+        vm.prank(liquidityProvider);
         RouterX.addLiquidity(
-            tokenA, tokenB, amountA, amountB, _liquidityProviders[0]
+            tokenA, tokenB, amountA, amountB, liquidityProvider
         );
 
         assertEq(TokenOne.balanceOf(address(PairX)), 0);
-        assertEq(TokenOne.balanceOf(_liquidityProviders[0]), amountA);
+        assertEq(TokenOne.balanceOf(liquidityProvider), amountA);
         assertEq(TokenTwo.balanceOf(address(PairX)), 0);
-        assertEq(TokenTwo.balanceOf(_liquidityProviders[0]), amountB);
+        assertEq(TokenTwo.balanceOf(liquidityProvider), amountB);
 
-        assertEq(PairX.balanceOf(_liquidityProviders[0]), 0);
+        assertEq(PairX.balanceOf(liquidityProvider), 0);
     }
 }

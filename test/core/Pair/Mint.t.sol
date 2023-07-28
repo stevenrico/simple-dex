@@ -102,7 +102,7 @@ contract MintTest is BaseTest {
         address pair,
         uint256 ratio
     ) private returns (uint256 amount) {
-        uint256 totalDistribution = _tokenDistributions[address(token)];
+        uint256 totalDistribution = _tokenDistributions[address(token)][liquidityProvider];
         amount = totalDistribution * ratio / 100;
 
         vm.prank(liquidityProvider);
