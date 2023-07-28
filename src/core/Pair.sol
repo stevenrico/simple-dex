@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import { IERC20 } from "@openzeppelin/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/utils/math/Math.sol";
 
 import { IPair } from "contracts/core/interfaces/IPair.sol";
@@ -16,7 +17,9 @@ import { LiquidityTokenERC20 } from "contracts/core/LiquidityTokenERC20.sol";
  * - burn liquidity tokens
  * - perform swaps between token A and token B
  *
- * @dev The 'Pair' contract inherits from 'LiquidityTokenERC20'.
+ * @dev The 'Pair' contract inherits from 'IPair' and 'LiquidityTokenERC20'.
+ *
+ * It uses 'SafeERC20.safeTransfer(token, to, value);' for transfers.
  */
 contract Pair is IPair, LiquidityTokenERC20 {
     address private _tokenA;
@@ -115,5 +118,87 @@ contract Pair is IPair, LiquidityTokenERC20 {
         _update(balanceA, balanceB);
 
         emit Mint(msg.sender, amountA, amountB);
+    }
+
+    /**
+     * @dev Swap token A and token B.
+     *
+     * Formula:
+     *
+     * balanceA     amount of tokens A owned by the contract, after swap
+     * balanceB     amount of tokens B owned by the contract, after swap
+     * currentK     constant K from 'xy = K', after the swap
+     * reserveA     amount of tokens A owned by the contract, before swap
+     * reserveB     amount of tokens B owned by the contract, before swap
+     * previousK    constant K from 'xy = K', before the swap
+     *
+     * currentK = balanceA * balanceB
+     * previousK = reserveA * reserveB
+     *
+     * Check that K remains constant:
+     *
+     * currentK == previousK
+     *
+     * @param amountAOut        The amount of token A to send to the recipient; if amountAOut != 0 than amountBOut == 0.
+     * @param amountBOut        The amount of token B to send to the recipient; if amountBOut != 0 than amountAOut == 0.
+     * @param recipient         The recipient of the tokens.
+     */
+    function swap(uint256 amountAOut, uint256 amountBOut, address recipient)
+        external
+    {
+        require(
+            amountAOut > 0 || amountBOut > 0, "Pair: Insufficient output amount"
+        );
+
+        (uint256 reserveA, uint256 reserveB) = getReserves();
+
+        require(
+            amountAOut < reserveA && amountBOut < reserveB,
+            "Pair: Insufficient liquidity"
+        );
+
+        uint256 balanceA;
+        uint256 balanceB;
+
+        {
+            address tokenA = _tokenA;
+            address tokenB = _tokenB;
+
+            require(
+                recipient != tokenA && recipient != tokenB,
+                "Pair: Invalid recipient"
+            );
+
+            if (amountAOut > 0) {
+                SafeERC20.safeTransfer(IERC20(tokenA), recipient, amountAOut);
+            }
+            if (amountBOut > 0) {
+                SafeERC20.safeTransfer(IERC20(tokenB), recipient, amountBOut);
+            }
+
+            balanceA = IERC20(tokenA).balanceOf(address(this));
+            balanceB = IERC20(tokenB).balanceOf(address(this));
+        }
+
+        uint256 amountAIn =
+            balanceA > reserveA - amountAOut ? balanceA - reserveA : 0;
+        uint256 amountBIn =
+            balanceB > reserveB - amountBOut ? balanceB - reserveB : 0;
+
+        require(
+            amountAIn > 0 || amountBIn > 0, "Pair: Insufficient input amount"
+        );
+
+        uint256 previousK = reserveA * reserveB;
+        uint256 currentK = balanceA * balanceB;
+
+        // [Q] Should it be `currentK == previousK`?
+        require(previousK <= currentK, "Pair: K");
+
+        _update(balanceA, balanceB);
+
+        emit Swap(
+            msg.sender, recipient, amountAIn, amountAOut, amountBIn, amountBOut
+        );
     }
 }
