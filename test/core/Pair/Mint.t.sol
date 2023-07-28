@@ -1,29 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import { BaseTest } from "tests/BaseTest.sol";
+import { PairBase } from "./Base.t.sol";
 
 import { Math } from "@openzeppelin/utils/math/Math.sol";
 
-import { MockERC20 } from "tests/mocks/MockERC20.sol";
-import { Pair } from "contracts/core/Pair.sol";
-
-contract MintTest is BaseTest {
+contract MintTest is PairBase {
     event Mint(address indexed sender, uint256 amountA, uint256 amountB);
 
     function setUp() public override {
         super.setUp();
-    }
-
-    function _itUpdatesReserves(
-        Pair pair,
-        uint256 expectedAmountA,
-        uint256 expectedAmountB
-    ) private {
-        (uint256 reserveA, uint256 reserveB) = pair.getReserves();
-
-        assertEq(reserveA, expectedAmountA);
-        assertEq(reserveB, expectedAmountB);
     }
 
     function testMintWhenTotalSupplyIsZero() external {
@@ -94,18 +80,5 @@ contract MintTest is BaseTest {
 
             _itUpdatesReserves(PairX, reserveA + amountA, reserveB + amountB);
         }
-    }
-
-    function _addLiquidity(
-        address liquidityProvider,
-        MockERC20 token,
-        address pair,
-        uint256 ratio
-    ) private returns (uint256 amount) {
-        uint256 totalDistribution = _tokenDistributions[address(token)][liquidityProvider];
-        amount = totalDistribution * ratio / 100;
-
-        vm.prank(liquidityProvider);
-        token.transfer(pair, amount);
     }
 }
