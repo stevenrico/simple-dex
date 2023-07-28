@@ -27,6 +27,8 @@ contract BaseTest is Test, Users {
     mapping(address token => mapping(address user => uint256 amount)) internal
         _tokenDistributions;
 
+    mapping(address token => uint256 scale) internal _scales;
+
     address private _owner;
 
     address[] internal _liquidityProviders;
@@ -47,6 +49,16 @@ contract BaseTest is Test, Users {
             Utils.sortTokens(address(TokenOne), address(TokenTwo));
 
         PairX = new Pair(tokenA, tokenB);
+
+        uint256 decimalsA = tokenA == address(TokenOne)
+            ? TokenOne.decimals()
+            : TokenTwo.decimals();
+        uint256 decimalsB = tokenB == address(TokenOne)
+            ? TokenOne.decimals()
+            : TokenTwo.decimals();
+
+        _scales[tokenA] = 10 ** decimalsA;
+        _scales[tokenB] = 10 ** decimalsB;
 
         RouterX = new Router(address(PairX));
 
