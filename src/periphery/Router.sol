@@ -3,7 +3,9 @@ pragma solidity ^0.8.19;
 
 import { SafeERC20 } from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/token/ERC20/IERC20.sol";
+
 import { IPair } from "contracts/core/interfaces/IPair.sol";
+import { Utils } from "contracts/libraries/Utils.sol";
 
 /**
  * @title Router
@@ -75,5 +77,66 @@ contract Router {
         sentB = amountB;
 
         liquidityTokens = IPair(pair).mint(recipient);
+    }
+
+    /**
+     * @dev Swap tokens by sending an exact amount in and receive an amount out
+     * greater than the given minimum.
+     *
+     * Formula:
+     *
+     * amountOut
+     * amountIn
+     * reserveOut
+     * reserveIn
+     *
+     * amountOut = amountIn * (reserveOut / amountIn + reserveIn)
+     *
+     * @custom:resource Uniswap Doc:
+     * https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-01#swapexacttokensfortokens
+     *
+     * @param amountIn          The amount of tokens sent in for the swap.
+     * @param amountOutMin      The min amount of tokens to be sent out from the swap.
+     * @param tokens            Array of address of the tokens in the swap; tokens[0] = input token; tokens[1] = output token
+     * @param recipient         Recipient of the swapped tokens.
+     *
+     * @return sentIn           The amount of tokens sent in for the swap.
+     * @return sentOut          The amount of tokens sent out from the swap.
+     */
+    function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata tokens,
+        address recipient
+    ) external returns (uint256 sentIn, uint256 sentOut) {
+        require(amountIn > 0, "Router: Insufficient input amount");
+
+        (address inputToken, address outputToken) = (tokens[0], tokens[1]);
+
+        (uint256 reserveIn, uint256 reserveOut) =
+            Utils.getReserves(_pair, inputToken, outputToken);
+
+        require(
+            reserveIn > 0 && reserveOut > 0, "Router: Insufficient liquidity"
+        );
+
+        uint256 amountOut = amountIn * reserveOut / (amountIn + reserveIn);
+
+        require(amountOut > amountOutMin, "Router: Insufficient output amount");
+
+        SafeERC20.safeTransferFrom(
+            IERC20(inputToken), msg.sender, _pair, amountIn
+        );
+
+        (address tokenA,) = Utils.sortTokens(inputToken, outputToken);
+
+        (uint256 amountAOut, uint256 amountBOut) = inputToken == tokenA
+            ? (uint256(0), amountOut)
+            : (amountOut, uint256(0));
+
+        IPair(_pair).swap(amountAOut, amountBOut, recipient);
+
+        sentIn = amountIn;
+        sentOut = amountOut;
     }
 }
