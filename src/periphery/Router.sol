@@ -85,12 +85,12 @@ contract Router {
      *
      * Formula:
      *
-     * amountOut
-     * amountIn
-     * reserveOut
-     * reserveIn
+     * amountOut        amount of tokens to be sent out
+     * amountIn         amount of tokens to be sent in
+     * reserveOut       amount of tokens owned by the contract; of the token to be sent out
+     * reserveIn        amount of tokens owned by the contract; of the token to be sent in
      *
-     * amountOut = amountIn * (reserveOut / amountIn + reserveIn)
+     * amountOut = amountIn * (reserveOut / (amountIn + reserveIn))
      *
      * @custom:resource Uniswap Doc:
      * https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-01#swapexacttokensfortokens
@@ -146,12 +146,12 @@ contract Router {
      *
      * Formula:
      *
-     * amountOut
-     * amountIn
-     * reserveOut
-     * reserveIn
+     * amountOut        amount of tokens to be sent out
+     * amountIn         amount of tokens to be sent in
+     * reserveOut       amount of tokens owned by the contract; of the token to be sent out
+     * reserveIn        amount of tokens owned by the contract; of the token to be sent in
      *
-     * amountIn = amountOut * (reserveIn / amountOut + reserveOut)
+     * amountIn = amountOut * (reserveIn / (amountOut - reserveOut))
      *
      * @custom:resource Uniswap Doc:
      * https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-01#swaptokensforexacttokens
