@@ -14,11 +14,11 @@ library Utils {
 
     function getReserves(address pair, address token0, address token1)
         internal
-        returns (uint256 reserveA, uint256 reserveB)
+        returns (uint256 reserve0, uint256 reserve1)
     {
         (address tokenA,) = sortTokens(token0, token1);
-        (uint256 reserve0, uint256 reserve1) = IPair(pair).getReserves();
-        (reserveA, reserveB) =
-            token0 == tokenA ? (reserve0, reserve1) : (reserve1, reserve0);
+        (uint256 reserveA, uint256 reserveB) = IPair(pair).getReserves();
+        (reserve0, reserve1) =
+            token0 == tokenA ? (reserveA, reserveB) : (reserveB, reserveA);
     }
 }
