@@ -74,7 +74,7 @@ contract BaseTest is Test, Users {
         (, address[] memory traders) = _createUserGroup("TRADER", 2, 100 ether);
         _traders = traders;
 
-        _mintMockTokensForUsers(traders, TokenOne, 50);
+        _mintMockTokensForUsers(traders, TokenOne, 55);
         _mintMockTokensForUsers(traders, TokenTwo, 10);
     }
 

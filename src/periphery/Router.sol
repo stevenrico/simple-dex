@@ -98,7 +98,7 @@ contract Router {
      * @param amountIn          The amount of tokens sent in for the swap.
      * @param amountOutMin      The min amount of tokens to be sent out from the swap.
      * @param tokens            Array of address of the tokens in the swap; tokens[0] = input token; tokens[1] = output token
-     * @param recipient         Recipient of the swapped tokens.
+     * @param recipient         The recipient of the swapped tokens.
      *
      * @return sentIn           The amount of tokens sent in for the swap.
      * @return sentOut          The amount of tokens sent out from the swap.
@@ -123,6 +123,68 @@ contract Router {
         uint256 amountOut = amountIn * reserveOut / (amountIn + reserveIn);
 
         require(amountOut > amountOutMin, "Router: Insufficient output amount");
+
+        SafeERC20.safeTransferFrom(
+            IERC20(inputToken), msg.sender, _pair, amountIn
+        );
+
+        (address tokenA,) = Utils.sortTokens(inputToken, outputToken);
+
+        (uint256 amountAOut, uint256 amountBOut) = inputToken == tokenA
+            ? (uint256(0), amountOut)
+            : (amountOut, uint256(0));
+
+        IPair(_pair).swap(amountAOut, amountBOut, recipient);
+
+        sentIn = amountIn;
+        sentOut = amountOut;
+    }
+
+    /**
+     * @dev Swap tokens by sending an exact amount in and receive an amount out
+     * greater than the given minimum.
+     *
+     * Formula:
+     *
+     * amountOut
+     * amountIn
+     * reserveOut
+     * reserveIn
+     *
+     * amountIn = amountOut * (reserveIn / amountOut + reserveOut)
+     *
+     * @custom:resource Uniswap Doc:
+     * https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-01#swaptokensforexacttokens
+     *
+     * @param amountOut         The amount of tokens sent out from the swap.
+     * @param amountInMax       The max amount of tokens to be sent in for the swap.
+     * @param tokens            Array of address of the tokens in the swap; tokens[0] = input token; tokens[1] = output token
+     * @param recipient         The recipient of the swapped tokens.
+     *
+     * @return sentIn           The amount of tokens sent in for the swap.
+     * @return sentOut          The amount of tokens sent out from the swap.
+     */
+    function swapTokensForExactTokens(
+        uint256 amountOut,
+        uint256 amountInMax,
+        address[] calldata tokens,
+        address recipient
+    ) external returns (uint256 sentIn, uint256 sentOut) {
+        require(amountOut > 0, "Router: Insufficient output amount");
+
+        (address inputToken, address outputToken) = (tokens[0], tokens[1]);
+
+        (uint256 reserveIn, uint256 reserveOut) =
+            Utils.getReserves(_pair, inputToken, outputToken);
+
+        require(
+            reserveIn > 0 && reserveOut > 0, "Router: Insufficient liquidity"
+        );
+
+        // [Q] Why is it necessary to add 1?
+        uint256 amountIn = (amountOut * reserveIn / (reserveOut - amountOut)) + 1;
+
+        require(amountIn < amountInMax, "Router: Excessive input amount");
 
         SafeERC20.safeTransferFrom(
             IERC20(inputToken), msg.sender, _pair, amountIn
