@@ -41,9 +41,10 @@ contract SwapTokensForExactTokens is BaseTest {
 
         uint256 traderBalanceA = _tokenDistributions[tokenA][trader];
         uint256 traderBalanceB = _tokenDistributions[tokenB][trader];
-        
+
         uint256 amountAOut = traderBalanceA;
-        uint256 amountBIn = (amountAOut * reserveB / (reserveA - amountAOut)) + 1;
+        uint256 amountBIn =
+            (amountAOut * reserveB / (reserveA - amountAOut)) + 1;
 
         {
             // [ERROR] Stack too deep
@@ -132,9 +133,10 @@ contract SwapTokensForExactTokens is BaseTest {
 
         tokens[0] = tokenB;
         tokens[1] = tokenA;
-        
+
         uint256 amountAOut = _tokenDistributions[tokenA][trader];
-        uint256 amountBIn = (amountAOut * reserveB / (reserveA - amountAOut)) + 1;
+        uint256 amountBIn =
+            (amountAOut * reserveB / (reserveA - amountAOut)) + 1;
 
         uint256 oneToken = 1 * _scales[tokenB];
 
