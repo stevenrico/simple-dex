@@ -87,7 +87,7 @@ contract Pair is IPair, LiquidityTokenERC20 {
      *
      * l = Math.min((tokenA * s / reserveA), (tokenB * s / reserveB))
      *
-     * @param recipient         Recipient of the liquidty tokens.
+     * @param recipient         The recipient of the liquidty tokens.
      *
      * @return liquidityTokens  The amount of liquidity tokens minted to the recipient.
      */
@@ -118,6 +118,53 @@ contract Pair is IPair, LiquidityTokenERC20 {
         _update(balanceA, balanceB);
 
         emit Mint(msg.sender, amountA, amountB);
+    }
+
+    /**
+     * @dev Burns liquidity tokens from the liquidity provider.
+     *
+     * Formula:
+     *
+     * l            amount of liquidity tokens to burn
+     * a            amount of tokens to be sent to the liquidity provider
+     * b            amount of tokens owned by the contract
+     * s            total supply of liquidty tokens
+     *
+     * a = b * (l / s)
+     *
+     * @param recipient         The recipient of the liquidty tokens.
+     *
+     * @return amountA          The amount of token A sent to the recipient.
+     * @return amountB          The amount of token B sent to the recipient.
+     */
+    function burn(address recipient)
+        external
+        returns (uint256 amountA, uint256 amountB)
+    {
+        uint256 balanceA = IERC20(_tokenA).balanceOf(address(this));
+        uint256 balanceB = IERC20(_tokenB).balanceOf(address(this));
+        uint256 liquidity = balanceOf(address(this));
+
+        uint256 totalSupply = totalSupply();
+
+        amountA = balanceA * liquidity / totalSupply;
+        amountB = balanceB * liquidity / totalSupply;
+
+        require(
+            amountA > 0 && amountB > 0, "Pair: insufficient liquidity burned"
+        );
+
+        _burn(address(this), liquidity);
+
+        SafeERC20.safeTransfer(IERC20(_tokenA), recipient, amountA);
+        SafeERC20.safeTransfer(IERC20(_tokenB), recipient, amountB);
+
+        balanceA = IERC20(_tokenA).balanceOf(address(this));
+        balanceB = IERC20(_tokenB).balanceOf(address(this));
+
+        _update(balanceA, balanceB);
+
+        emit Burn(msg.sender, recipient, amountA, amountB);
     }
 
     /**
