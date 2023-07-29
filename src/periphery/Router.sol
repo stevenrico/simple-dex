@@ -182,7 +182,8 @@ contract Router {
         );
 
         // [Q] Why is it necessary to add 1?
-        uint256 amountIn = (amountOut * reserveIn / (reserveOut - amountOut)) + 1;
+        uint256 amountIn =
+            (amountOut * reserveIn / (reserveOut - amountOut)) + 1;
 
         require(amountIn < amountInMax, "Router: Excessive input amount");
 
