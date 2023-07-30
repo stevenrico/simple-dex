@@ -33,7 +33,7 @@ contract SwapTest is PairBase {
             _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
-        PairX.mint(liquidityProvider);
+        PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 
@@ -78,7 +78,7 @@ contract SwapTest is PairBase {
             _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
-        PairX.mint(liquidityProvider);
+        PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 
@@ -145,7 +145,7 @@ contract SwapTest is PairBase {
         _addLiquidity(liquidityProvider, tokenB, address(PairX), 5);
 
         vm.prank(liquidityProvider);
-        PairX.mint(liquidityProvider);
+        PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 
@@ -171,7 +171,7 @@ contract SwapTest is PairBase {
         _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
-        PairX.mint(liquidityProvider);
+        PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 
@@ -203,7 +203,7 @@ contract SwapTest is PairBase {
         _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
-        PairX.mint(liquidityProvider);
+        PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 
@@ -233,7 +233,7 @@ contract SwapTest is PairBase {
             _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
-        PairX.mint(liquidityProvider);
+        PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 
@@ -265,7 +265,7 @@ contract SwapTest is PairBase {
             _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
-        PairX.mint(liquidityProvider);
+        PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 

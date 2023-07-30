@@ -24,7 +24,7 @@ contract MintTest is PairBase {
         emit Mint(recipient, amountA, amountB);
 
         vm.prank(recipient);
-        uint256 liquidityTokens = PairX.mint(recipient);
+        uint256 liquidityTokens = PairX.mint(recipient, false);
 
         uint256 expectedAmount = Math.sqrt(amountA * amountB);
 
@@ -51,7 +51,7 @@ contract MintTest is PairBase {
                 _addLiquidity(recipient, tokenB, address(PairX), 50);
 
             vm.prank(recipient);
-            uint256 liquidityTokens = PairX.mint(recipient);
+            uint256 liquidityTokens = PairX.mint(recipient, false);
 
             reserveA += amountA;
             reserveB += amountB;
@@ -68,7 +68,7 @@ contract MintTest is PairBase {
                 _addLiquidity(recipient, tokenB, address(PairX), 50);
 
             vm.prank(recipient);
-            uint256 liquidityTokens = PairX.mint(recipient);
+            uint256 liquidityTokens = PairX.mint(recipient, false);
 
             uint256 expectedAmount = Math.min(
                 amountA * totalSupply / reserveA,

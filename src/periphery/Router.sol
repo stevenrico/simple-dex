@@ -76,7 +76,7 @@ contract Router {
         sentA = amountA;
         sentB = amountB;
 
-        liquidityTokens = IPair(pair).mint(recipient);
+        liquidityTokens = IPair(pair).mint(recipient, false);
     }
 
     /**

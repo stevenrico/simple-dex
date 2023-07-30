@@ -73,8 +73,8 @@ contract FrontrunMint is Test, Users {
         uint256 frontrunnersId = _createUserGroup("FRONTRUNNER");
         _frontrunner = _createUser(frontrunnersId, 100 ether);
 
-        uint256 frontrunAmount0 = 50000 * _scales[address(TokenOne)];
-        uint256 frontrunAmount1 = 50000 * _scales[address(TokenTwo)];
+        uint256 frontrunAmount0 = 10 * _scales[address(TokenOne)];
+        uint256 frontrunAmount1 = 10 * _scales[address(TokenTwo)];
 
         vm.startPrank(_frontrunner);
 
@@ -146,7 +146,7 @@ contract FrontrunMint is Test, Users {
         uint256 frontrunInB = _addLiquidityForFrontrun(_frontrunner, tokenB, address(PairX));
 
         vm.prank(_frontrunner);
-        uint256 frontrunTokens = PairX.mint(_frontrunner);
+        uint256 frontrunTokens = PairX.mint(_frontrunner, true);
     
         console.log("|");
         console.log("*--[FRONTRUN] Frontrunner mint:");
@@ -167,7 +167,82 @@ contract FrontrunMint is Test, Users {
         uint256 providerInB = _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
    
         vm.prank(liquidityProvider);
-        uint256 providerTokens = PairX.mint(liquidityProvider);
+        uint256 providerTokens = PairX.mint(liquidityProvider, true);
+
+        console.log("|");
+        console.log("*--[FRONTRUN] Provider mint:");
+        console.log("|");
+        console.log("    Liquidity Tokens:", providerTokens);
+        
+        vm.startPrank(_frontrunner);
+        
+        PairX.transfer(address(PairX), frontrunTokens);
+        (uint256 frontrunOutA, uint256 frontrunOutB) = PairX.burn(_frontrunner);
+        
+        vm.stopPrank();
+        
+        console.log("|");
+        console.log("*--[FRONTRUN] Frontrunner Burn:");
+        console.log("    Before => After");
+        console.log("    Token A:");
+        console.log("    ",frontrunInA, "=>", frontrunOutA);
+        console.log("    Token B:");
+        console.log("    ", frontrunInB, "=>", frontrunOutB);
+        
+        vm.startPrank(liquidityProvider);
+        
+        PairX.transfer(address(PairX), providerTokens);
+        (uint256 providerOutA, uint256 providerOutB) = PairX.burn(liquidityProvider);
+        
+        vm.stopPrank();
+        
+        console.log("|");
+        console.log("*--[FRONTRUN] Provider Burn:");
+        console.log("    Before => After");
+        console.log("    Token A:");
+        console.log("    ",providerInA, "=>", providerOutA);
+        console.log("    Token B:");
+        console.log("    ", providerInB, "=>", providerOutB);
+        console.log("|");
+        console.log(" \\__________________________");
+    }
+
+    function testFrontrunWithMinimumLiquidity() external {
+        (address tokenA, address tokenB) = PairX.getTokens();
+
+        console.log("*--[FRONTRUN] Frontrunner add liquidity:");
+        console.log("|");
+        console.log("    Liquidity Ratio:");
+        console.log("    Token A:", _tokenDistributions[tokenA][_frontrunner]);
+        console.log("    Token B:", 1);
+        console.log("    Ratio [A:B]:", _tokenDistributions[tokenA][_frontrunner], ":", 1);
+
+        uint256 frontrunInA = _addLiquidity(_frontrunner, tokenA, address(PairX), 100);
+        uint256 frontrunInB = _addLiquidityForFrontrun(_frontrunner, tokenB, address(PairX));
+
+        vm.prank(_frontrunner);
+        uint256 frontrunTokens = PairX.mint(_frontrunner, false);
+    
+        console.log("|");
+        console.log("*--[FRONTRUN] Frontrunner mint:");
+        console.log("|");
+        console.log("    Liquidity Tokens:", frontrunTokens);
+
+        address liquidityProvider = _liquidityProviders[0];
+
+        console.log("|");
+        console.log("*--[FRONTRUN] Provider add liquidity:");
+        console.log("|");
+        console.log("    Liquidity Ratio:");
+        console.log("    Token A:", _tokenDistributions[tokenA][liquidityProvider]);
+        console.log("    Token B:", _tokenDistributions[tokenB][liquidityProvider]);
+        console.log("    Ratio [A:B]:", _tokenDistributions[tokenA][liquidityProvider] / _tokenDistributions[tokenB][liquidityProvider], ":", 1);
+        
+        uint256 providerInA = _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
+        uint256 providerInB = _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
+   
+        vm.prank(liquidityProvider);
+        uint256 providerTokens = PairX.mint(liquidityProvider, false);
 
         console.log("|");
         console.log("*--[FRONTRUN] Provider mint:");

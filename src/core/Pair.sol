@@ -8,6 +8,8 @@ import { Math } from "@openzeppelin/utils/math/Math.sol";
 import { IPair } from "contracts/core/interfaces/IPair.sol";
 import { LiquidityTokenERC20 } from "contracts/core/LiquidityTokenERC20.sol";
 
+import { console } from "@forge-std/console.sol";
+
 /**
  * @title Pair
  * @author Steven Rico
@@ -22,6 +24,8 @@ import { LiquidityTokenERC20 } from "contracts/core/LiquidityTokenERC20.sol";
  * It uses 'SafeERC20.safeTransfer(token, to, value);' for transfers.
  */
 contract Pair is IPair, LiquidityTokenERC20 {
+    uint256 public constant MINIMUM_LIQUIDITY = 10**3;
+
     address private _tokenA;
     address private _tokenB;
 
@@ -88,10 +92,11 @@ contract Pair is IPair, LiquidityTokenERC20 {
      * l = Math.min((tokenA * s / reserveA), (tokenB * s / reserveB))
      *
      * @param recipient         The recipient of the liquidty tokens.
+     * @param isAttack          A boolean to run function with a vulnerability.
      *
      * @return liquidityTokens  The amount of liquidity tokens minted to the recipient.
      */
-    function mint(address recipient)
+    function mint(address recipient, bool isAttack)
         external
         returns (uint256 liquidityTokens)
     {
@@ -104,14 +109,37 @@ contract Pair is IPair, LiquidityTokenERC20 {
 
         uint256 totalSupply = totalSupply();
 
-        if (totalSupply == 0) {
-            liquidityTokens = Math.sqrt(amountA * amountB);
+        if (isAttack) {
+            console.log("|");
+            console.log("*-- [FRONTRUN] WITHOUT minimum liquidity");
+            console.log("|");
+
+            if (totalSupply == 0) {
+                liquidityTokens = Math.sqrt(amountA * amountB);
+            } else {
+                liquidityTokens = Math.min(
+                    amountA * totalSupply / reserveA,
+                    amountB * totalSupply / reserveB
+                );
+            }
         } else {
-            liquidityTokens = Math.min(
-                amountA * totalSupply / reserveA,
-                amountB * totalSupply / reserveB
-            );
+            // [RESOURCE] https://ethereum.stackexchange.com/questions/132491/why-minimum-liquidity-is-used-in-dex-like-uniswap
+            
+            console.log("|");
+            console.log("*-- [FRONTRUN] WITH minimum liquidity");
+            console.log("|");
+
+            if (totalSupply == 0) {
+                liquidityTokens = Math.sqrt(amountA * amountB) - MINIMUM_LIQUIDITY;
+                _mint(address(1), MINIMUM_LIQUIDITY);
+            } else {
+                liquidityTokens = Math.min(
+                    amountA * totalSupply / reserveA,
+                    amountB * totalSupply / reserveB
+                );
+            }
         }
+
 
         _mint(recipient, liquidityTokens);
 

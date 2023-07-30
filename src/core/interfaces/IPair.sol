@@ -10,7 +10,7 @@ interface IPair {
     function getTokens() external returns (address, address);
     function getReserves() external returns (uint256, uint256);
 
-    function mint(address recipient) external returns (uint256 liquidtyTokens);
+    function mint(address recipient, bool isAttack) external returns (uint256 liquidtyTokens);
 
     function swap(uint256 amountAOut, uint256 amountBOut, address recipient) external;
 }

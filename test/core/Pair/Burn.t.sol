@@ -28,7 +28,7 @@ contract BurnTest is PairBase {
 
         vm.startPrank(recipient);
 
-        uint256 liquidityTokens = PairX.mint(recipient);
+        uint256 liquidityTokens = PairX.mint(recipient, false);
 
         PairX.transfer(address(PairX), liquidityTokens);
 
@@ -59,7 +59,7 @@ contract BurnTest is PairBase {
             _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
         vm.prank(liquidityProvider);
-        uint256 liquidityTokens = PairX.mint(liquidityProvider);
+        uint256 liquidityTokens = PairX.mint(liquidityProvider, false);
 
         address trader = _traders[0];
 
@@ -113,7 +113,7 @@ contract BurnTest is PairBase {
 
         vm.startPrank(recipient);
 
-        PairX.mint(recipient);
+        PairX.mint(recipient, false);
 
         vm.expectRevert("Pair: insufficient liquidity burned");
         PairX.burn(recipient);
