@@ -99,39 +99,10 @@ contract Pair is IPair, LiquidityTokenERC20 {
     {
         (uint256 reserveA, uint256 reserveB) = getReserves();
 
-        /**
-         * Used low-level call in order to bypass 'staticcall', so technically not possible.
-         *
-         * Original:
-         * uint256 balanceA = IERC20(_tokenA).balanceOf(address(this));
-         */
-        (, bytes memory resultA) = _tokenA.call(
-            abi.encodeWithSignature("balanceOf(address)", address(this))
-        );
-        uint256 balanceA = abi.decode(resultA, (uint256));
-
-        /**
-         * Used low-level call in order to bypass 'staticcall', so technically not possible.
-         *
-         * Original:
-         * uint256 balanceB = IERC20(_tokenB).balanceOf(address(this));
-         */
-        (, bytes memory resultB) = _tokenB.call(
-            abi.encodeWithSignature("balanceOf(address)", address(this))
-        );
-        uint256 balanceB = abi.decode(resultB, (uint256));
-
+        uint256 balanceA = IERC20(_tokenA).balanceOf(address(this));
+        uint256 balanceB = IERC20(_tokenB).balanceOf(address(this));
         uint256 amountA = balanceA - reserveA;
         uint256 amountB = balanceB - reserveB;
-
-        console.log("");
-        console.log("    TokenEvil:", _tokenA);
-        console.log("    r & a:", reserveA, amountA);
-        console.log("    balance:", balanceA);
-        console.log("    TokenGood:", _tokenB);
-        console.log("    r & a:", reserveB, amountB);
-        console.log("    balance:", balanceB);
-        console.log("");
 
         uint256 totalSupply = totalSupply();
 
@@ -178,24 +149,49 @@ contract Pair is IPair, LiquidityTokenERC20 {
 
         uint256 totalSupply = totalSupply();
 
-        // console.log("Total Supply: ", totalSupply);
-
         amountA = balanceA * liquidity / totalSupply;
         amountB = balanceB * liquidity / totalSupply;
 
+        console.log("");
+        console.log("    Liquidity:", liquidity);
+        console.log("");
+        console.log("    TokenEvil:", _tokenA);
+        console.log("    balance before attack:", balanceA);
+        console.log("    TokenGood:", _tokenB);
+        console.log("    balance before attack:", balanceB);
+        console.log("");
+        
         require(
             amountA > 0 && amountB > 0, "Pair: insufficient liquidity burned"
         );
 
+        /**
+         * Original position:
+         * _burn(address(this), liquidity);
+         */ 
+        
+        SafeERC20.safeTransfer(IERC20(_tokenB), recipient, amountB);
+        SafeERC20.safeTransfer(IERC20(_tokenA), recipient, amountA);
+        
+        console.log("");
+        console.log("    Liquidity @", liquidity);
+        console.log("");
+        console.log("    TokenEvil:", _tokenA);
+        console.log("    balance after attack:", balanceA);
+        console.log("    TokenGood:", _tokenB);
+        console.log("    balance after attack:", balanceB);
+        console.log("");
+
+        /**
+         * Hack position:
+         */
+
         _burn(address(this), liquidity);
 
-        // console.log("[Hack] Pair: before re-entrancy");
-
-        SafeERC20.safeTransfer(IERC20(_tokenA), recipient, amountA);
-        SafeERC20.safeTransfer(IERC20(_tokenB), recipient, amountB);
-
-        // console.log("[Hack] Pair: after re-entrancy");
-
+        console.log("*--[Liquidity Burnt]");
+        console.log("|");
+        console.log("   Liquidity @", balanceOf(address(this)));
+         
         balanceA = IERC20(_tokenA).balanceOf(address(this));
         balanceB = IERC20(_tokenB).balanceOf(address(this));
 

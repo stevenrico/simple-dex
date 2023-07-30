@@ -109,10 +109,8 @@ contract CustomERC20 {
 
     /**
      * @dev See {IERC20-balanceOf}.
-     *
-     * [EDIT] removed function visibility 'view'
      */
-    function balanceOf(address account) public virtual returns (uint256) {
+    function balanceOf(address account) public view virtual returns (uint256) {
         return _balances[account];
     }
 

