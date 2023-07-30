@@ -8,6 +8,8 @@ import { Math } from "@openzeppelin/utils/math/Math.sol";
 import { IPair } from "contracts/core/interfaces/IPair.sol";
 import { LiquidityTokenERC20 } from "contracts/core/LiquidityTokenERC20.sol";
 
+import { console } from "@forge-std/console.sol";
+
 /**
  * @title Pair
  * @author Steven Rico
@@ -97,10 +99,39 @@ contract Pair is IPair, LiquidityTokenERC20 {
     {
         (uint256 reserveA, uint256 reserveB) = getReserves();
 
-        uint256 balanceA = IERC20(_tokenA).balanceOf(address(this));
-        uint256 balanceB = IERC20(_tokenB).balanceOf(address(this));
+        /**
+         * Used low-level call in order to bypass 'staticcall', so technically not possible.
+         *
+         * Original:
+         * uint256 balanceA = IERC20(_tokenA).balanceOf(address(this));
+         */
+        (, bytes memory resultA) = _tokenA.call(
+            abi.encodeWithSignature("balanceOf(address)", address(this))
+        );
+        uint256 balanceA = abi.decode(resultA, (uint256));
+
+        /**
+         * Used low-level call in order to bypass 'staticcall', so technically not possible.
+         *
+         * Original:
+         * uint256 balanceB = IERC20(_tokenB).balanceOf(address(this));
+         */
+        (, bytes memory resultB) = _tokenB.call(
+            abi.encodeWithSignature("balanceOf(address)", address(this))
+        );
+        uint256 balanceB = abi.decode(resultB, (uint256));
+
         uint256 amountA = balanceA - reserveA;
         uint256 amountB = balanceB - reserveB;
+
+        console.log("");
+        console.log("    TokenEvil:", _tokenA);
+        console.log("    r & a:", reserveA, amountA);
+        console.log("    balance:", balanceA);
+        console.log("    TokenGood:", _tokenB);
+        console.log("    r & a:", reserveB, amountB);
+        console.log("    balance:", balanceB);
+        console.log("");
 
         uint256 totalSupply = totalSupply();
 
@@ -147,6 +178,8 @@ contract Pair is IPair, LiquidityTokenERC20 {
 
         uint256 totalSupply = totalSupply();
 
+        // console.log("Total Supply: ", totalSupply);
+
         amountA = balanceA * liquidity / totalSupply;
         amountB = balanceB * liquidity / totalSupply;
 
@@ -156,8 +189,12 @@ contract Pair is IPair, LiquidityTokenERC20 {
 
         _burn(address(this), liquidity);
 
+        // console.log("[Hack] Pair: before re-entrancy");
+
         SafeERC20.safeTransfer(IERC20(_tokenA), recipient, amountA);
         SafeERC20.safeTransfer(IERC20(_tokenB), recipient, amountB);
+
+        // console.log("[Hack] Pair: after re-entrancy");
 
         balanceA = IERC20(_tokenA).balanceOf(address(this));
         balanceB = IERC20(_tokenB).balanceOf(address(this));
