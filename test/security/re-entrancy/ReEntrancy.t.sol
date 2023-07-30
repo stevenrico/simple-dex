@@ -65,11 +65,14 @@ contract ReEntrancyTest is Test, Users {
 
         TokenEvil.setPair(address(PairX));
 
-        TokenGood.mint(5000 * _scales[tokenGood]);
-        TokenEvil.mint(5000 * _scales[tokenEvil]);
+        uint256 amountGood = 10000 * _scales[tokenGood];
+        uint256 amountEvil = 10000 * _scales[tokenEvil];
 
-        _tokenDistributions[tokenGood][_attacker] = 5000 * _scales[tokenGood];
-        _tokenDistributions[tokenEvil][_attacker] = 5000 * _scales[tokenEvil];
+        TokenGood.mint(amountGood);
+        TokenEvil.mint(amountEvil);
+
+        _tokenDistributions[tokenGood][_attacker] = amountGood;
+        _tokenDistributions[tokenEvil][_attacker] = amountEvil;
 
         vm.stopPrank();
 
@@ -77,8 +80,8 @@ contract ReEntrancyTest is Test, Users {
             _createUserGroup("LIQUIDITY PROVIDER", 2, 100 ether);
         _liquidityProviders = liquidityProviders;
 
-        _mintMockTokensForUsers(liquidityProviders, TokenGood, 50000);
-        _mintMaliciousTokensForUsers(liquidityProviders, TokenEvil, 50000);
+        _mintMockTokensForUsers(liquidityProviders, TokenGood, 500000);
+        _mintMaliciousTokensForUsers(liquidityProviders, TokenEvil, 500000);
     }
 
     function _mintMockTokensForUsers(
@@ -142,7 +145,12 @@ contract ReEntrancyTest is Test, Users {
         TokenEvil.setAttackOn("BURN");
 
         PairX.approve(address(TokenEvil), liquidityTokens);
-        PairX.transfer(address(PairX), 1000 * _scales[tokenA]);
+        PairX.transfer(address(PairX), 2500 * _scales[tokenA]);
+
+        console.log("*--[Hack] Burn: Liquidity Tokens");
+        console.log("|");
+        console.log("    Total liquidty:", liquidityTokens / (1 * 10 ** 18));
+
 
         console.log("*--[Hack] Burn: normal call start");
         console.log("|");

