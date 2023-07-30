@@ -173,33 +173,37 @@ contract FrontrunMint is Test, Users {
         console.log("*--[FRONTRUN] Provider mint:");
         console.log("|");
         console.log("    Liquidity Tokens:", providerTokens);
-
+        
         vm.startPrank(_frontrunner);
-
+        
         PairX.transfer(address(PairX), frontrunTokens);
         (uint256 frontrunOutA, uint256 frontrunOutB) = PairX.burn(_frontrunner);
-
+        
         vm.stopPrank();
-
-        console.log("*--[FRONTRUN] Frontrunner Result:");
+        
+        console.log("|");
+        console.log("*--[FRONTRUN] Frontrunner Burn:");
         console.log("    Before => After");
         console.log("    Token A:");
         console.log("    ",frontrunInA, "=>", frontrunOutA);
         console.log("    Token B:");
         console.log("    ", frontrunInB, "=>", frontrunOutB);
-
+        
         vm.startPrank(liquidityProvider);
-
+        
         PairX.transfer(address(PairX), providerTokens);
         (uint256 providerOutA, uint256 providerOutB) = PairX.burn(liquidityProvider);
-
+        
         vm.stopPrank();
-
-        console.log("*--[FRONTRUN] Provider Result:");
+        
+        console.log("|");
+        console.log("*--[FRONTRUN] Provider Burn:");
         console.log("    Before => After");
         console.log("    Token A:");
         console.log("    ",providerInA, "=>", providerOutA);
         console.log("    Token B:");
         console.log("    ", providerInB, "=>", providerOutB);
+        console.log("|");
+        console.log(" \\__________________________");
     }
 }
